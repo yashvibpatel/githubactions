@@ -13,11 +13,15 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      - name: Set up SSH
+      - name: Setup SSH
         uses: webfactory/ssh-agent@v0.7.0
         with:
           ssh-private-key: ${{ secrets.EC2_PEM_KEY }}
 
-      - name: Copy files to EC2
+      - name: Upload index.html to EC2
         run: |
-          scp -o StrictHostKeyChecking=no index.html ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:${{ secrets.TARGET_DIR }}
+          # Copy to home folder first
+          scp -o StrictHostKeyChecking=no index.html ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }}:~/index.html
+
+          # Move file to /var/www/html with sudo
+          ssh -o StrictHostKeyChecking=no ${{ secrets.EC2_USER }}@${{ secrets.EC2_HOST }} "sudo mv ~/index.html /var/www/html/index.html && sudo chown www-data:www-data /var/www/html/index.html"
